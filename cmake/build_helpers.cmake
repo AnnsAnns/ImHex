@@ -89,6 +89,14 @@ endmacro()
 
 
 macro(configurePackingResources)
+    set(IMHEX_FORCE_LINK_PLUGINS "")
+
+    option (CREATE_PACKAGE "Create a package with CPack" OFF)
+
+    if (APPLE)
+        option (CREATE_BUNDLE "Create a bundle on macOS" OFF)
+    endif()
+
     if (WIN32)
         if (NOT (CMAKE_BUILD_TYPE STREQUAL "Debug"))
             set(APPLICATION_TYPE WIN32)
@@ -96,7 +104,7 @@ macro(configurePackingResources)
 
         set(IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/resource.rc")
 
-        if (IMHEX_GENERATE_PACKAGE)
+        if (CREATE_PACKAGE)
             set(CPACK_GENERATOR "WIX")
             set(CPACK_PACKAGE_NAME "ImHex")
             set(CPACK_PACKAGE_VENDOR "WerWolv")
@@ -114,7 +122,7 @@ macro(configurePackingResources)
     elseif (APPLE)
         set (IMHEX_ICON "${IMHEX_BASE_FOLDER}/resources/dist/macos/AppIcon.icns")
 
-        if (IMHEX_GENERATE_PACKAGE)
+        if (CREATE_BUNDLE)
             set(APPLICATION_TYPE MACOSX_BUNDLE)
             set_source_files_properties(${IMHEX_ICON} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
             set(MACOSX_BUNDLE_ICON_FILE "AppIcon.icns")
@@ -162,7 +170,7 @@ macro(createPackage)
                 if (WIN32)
                     install(TARGETS ${plugin} RUNTIME DESTINATION ${PLUGINS_INSTALL_LOCATION})
                 elseif (APPLE)
-                    if (IMHEX_GENERATE_PACKAGE)
+                    if (CREATE_BUNDLE)
                         set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PLUGINS_INSTALL_LOCATION})
                     else ()
                         set_target_properties(${plugin} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
@@ -232,7 +240,7 @@ macro(createPackage)
 
     endif()
     
-    if (IMHEX_GENERATE_PACKAGE AND APPLE)
+    if (CREATE_BUNDLE)
         include(PostprocessBundle)
         
         set_target_properties(libimhex PROPERTIES SOVERSION ${IMHEX_VERSION})
@@ -264,7 +272,7 @@ macro(createPackage)
         endif()
     endif()
 
-    if (IMHEX_GENERATE_PACKAGE AND WIN32)
+    if (CREATE_PACKAGE)
         set (CPACK_BUNDLE_NAME "ImHex")
         set (CPACK_BUNDLE_ICON "${CMAKE_SOURCE_DIR}/resources/dist/macos/AppIcon.icns" )
         set (CPACK_BUNDLE_PLIST "${CMAKE_BINARY_DIR}/ImHex.app/Contents/Info.plist")
